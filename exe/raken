@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
 
-require 'rake'
+require 'raken'
 
 Rake.application.run
