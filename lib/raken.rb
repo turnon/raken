@@ -54,19 +54,23 @@ module Rake
     def enhance *args, &blk
       if block_given?
         _enhance *args do |*params|
-          if ARGV.include?(name) && application.options.trace_tree
-            binding.trace_tree(**application.options.trace_tree) do
-              blk.call *params
-            end
-          elsif ARGV.include?(name) && application.options.pry_debug
-            binding.pry
-            blk.call *params
-          else
-            blk.call *params
-          end
+          apply_task_body blk, *params
         end
       else
         _enhance *args
+      end
+    end
+
+    def apply_task_body blk, *params
+      return blk.call *params unless ARGV.include?(name)
+
+      if application.options.trace_tree
+        binding.trace_tree(**application.options.trace_tree) do
+          blk.call *params
+        end
+      elsif application.options.pry_debug
+        binding.pry
+        blk.call *params
       end
     end
   end
