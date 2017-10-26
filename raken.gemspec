@@ -25,4 +25,5 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "rake", "> 10.0"
   spec.add_dependency "trace_tree"
+  spec.add_dependency "pry-byebug"
 end
