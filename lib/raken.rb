@@ -11,10 +11,10 @@ module Rake
 
     def standard_rake_options
       [
-        ['--time',
+        ['--time [all]',
          'time tasks',
          lambda { |value|
-           options.time = value
+           options.time = value || true
          }
         ],
         ['--trace-tree OPTS',
@@ -79,9 +79,8 @@ module Rake
     end
 
     def apply_task_body blk, *params
-      return blk.call *params unless ARGV.include?(name)
-
-      if application.options.time
+      if application.options.time &&
+          (application.options.time == 'all' || ARGV.include?(name))
         org_blk = blk
         blk = lambda { |*args|
           begin
@@ -92,6 +91,8 @@ module Rake
           end
         }
       end
+
+      return blk.call *params unless ARGV.include?(name)
 
       if application.options.trace_tree
         binding.trace_tree(**application.options.trace_tree) do
