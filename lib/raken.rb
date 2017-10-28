@@ -71,6 +71,8 @@ module Rake
       elsif application.options.pry_debug
         binding.pry
         blk.call *params
+      else
+        blk.call *params
       end
     end
   end
