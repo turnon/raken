@@ -7,6 +7,7 @@ require "pry"
 module Rake
   class Application
     alias_method :_standard_rake_options, :standard_rake_options
+    alias_method :_run, :run
 
     def standard_rake_options
       [
@@ -30,6 +31,15 @@ module Rake
          }
         ]
       ] + _standard_rake_options
+    end
+
+    def run
+      _run
+    ensure
+      tasks.each do |t|
+        next unless t.beginning
+        puts "#{t.name} #{t.beginning} -> #{t.ending} = #{t.duration}"
+      end
     end
 
     def keyworded opt
@@ -56,6 +66,7 @@ module Rake
 
   class Task
     alias_method :_enhance, :enhance
+    attr_reader :beginning, :ending
 
     def enhance *args, &blk
       if block_given?
@@ -74,10 +85,10 @@ module Rake
         org_blk = blk
         blk = lambda { |*args|
           begin
-            puts Time.now
+            @beginning = Time.now
             org_blk.call *args
           ensure
-            puts Time.now
+            @ending = Time.now
           end
         }
       end
@@ -92,6 +103,10 @@ module Rake
       else
         blk.call *params
       end
+    end
+
+    def duration
+      @ending - @beginning
     end
 
   end
