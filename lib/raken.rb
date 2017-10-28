@@ -10,6 +10,12 @@ module Rake
 
     def standard_rake_options
       [
+        ['--time',
+         'time tasks',
+         lambda { |value|
+           options.time = value
+         }
+        ],
         ['--trace-tree OPTS',
          'https://github.com/turnon/trace_tree',
          lambda { |value|
@@ -64,6 +70,18 @@ module Rake
     def apply_task_body blk, *params
       return blk.call *params unless ARGV.include?(name)
 
+      if application.options.time
+        org_blk = blk
+        blk = lambda { |*args|
+          begin
+            puts Time.now
+            org_blk.call *args
+          ensure
+            puts Time.now
+          end
+        }
+      end
+
       if application.options.trace_tree
         binding.trace_tree(**application.options.trace_tree) do
           blk.call *params
@@ -75,5 +93,6 @@ module Rake
         blk.call *params
       end
     end
+
   end
 end
