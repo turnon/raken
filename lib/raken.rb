@@ -7,9 +7,16 @@ require "pry"
 module Rake
   class Application
     alias_method :_standard_rake_options, :standard_rake_options
+    alias_method :_run, :run
 
     def standard_rake_options
       [
+        ['--time [all]',
+         'time tasks',
+         lambda { |value|
+           options.time = value || true
+         }
+        ],
         ['--trace-tree OPTS',
          'https://github.com/turnon/trace_tree',
          lambda { |value|
@@ -24,6 +31,15 @@ module Rake
          }
         ]
       ] + _standard_rake_options
+    end
+
+    def run
+      _run
+    ensure
+      tasks.each do |t|
+        next unless t.beginning
+        puts "#{t.name} #{t.beginning} -> #{t.ending} = #{t.duration}"
+      end if options.time
     end
 
     def keyworded opt
@@ -50,6 +66,7 @@ module Rake
 
   class Task
     alias_method :_enhance, :enhance
+    attr_reader :beginning, :ending
 
     def enhance *args, &blk
       if block_given?
@@ -62,6 +79,19 @@ module Rake
     end
 
     def apply_task_body blk, *params
+      if application.options.time &&
+          (application.options.time == 'all' || ARGV.include?(name))
+        org_blk = blk
+        blk = lambda { |*args|
+          begin
+            @beginning = Time.now
+            org_blk.call *args
+          ensure
+            @ending = Time.now
+          end
+        }
+      end
+
       return blk.call *params unless ARGV.include?(name)
 
       if application.options.trace_tree
@@ -75,5 +105,10 @@ module Rake
         blk.call *params
       end
     end
+
+    def duration
+      @ending - @beginning
+    end
+
   end
 end
