@@ -39,7 +39,7 @@ module Rake
       tasks.each do |t|
         next unless t.beginning
         puts "#{t.name} #{t.beginning} -> #{t.ending} = #{t.duration}"
-      end
+      end if options.time
     end
 
     def keyworded opt
